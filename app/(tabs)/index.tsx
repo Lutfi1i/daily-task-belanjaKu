@@ -1,98 +1,106 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { Tasks } from "@/types/task";
+import { useState } from "react";
+import { FlatList, useWindowDimensions, View } from "react-native";
+import {
+  Appbar,
+  Avatar,
+  Card,
+  Checkbox,
+  IconButton,
+  Text
+} from "react-native-paper";
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const [clearId, setClearId] = useState<number | null>(null);
+  const { width: windowWidth } = useWindowDimensions();
+  const [cart, setCart] = useState<Tasks[]>([
+    {
+      id: 1,
+      title: "Beras Premium 5kg",
+      label: "Beli Beras",
+      category: "Sembako",
+      description:
+        "Beras putih premium kualitas terbaik untuk kebutuhan rumah tangga",
+      createdAt: new Date("2026-01-10T08:30:00"),
+      updatedAt: new Date("2026-01-10T08:30:00"),
+    },
+    {
+      id: 2,
+      title: "Susu UHT Full Cream",
+      label: "Beli Susu",
+      category: "Minuman",
+      description: "Susu UHT full cream 1 liter, kaya kalsium",
+      createdAt: new Date("2026-01-11T09:00:00"),
+      updatedAt: new Date("2026-01-12T10:15:00"),
+    },
+    {
+      id: 3,
+      title: "Mie Instan Goreng",
+      label: "Beli Mie",
+      category: "Makanan",
+      description: "Mie instan rasa goreng favorit keluarga",
+      createdAt: new Date("2026-01-12T14:45:00"),
+      updatedAt: new Date("2026-01-13T16:20:00"),
+    },
+  ]);
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  return (
+    <View>
+      <Appbar.Header>
+        <Appbar.Content title="Groceries List" />
+        <Avatar.Image
+          size={30}
+          source={{
+            uri: "https://i.pinimg.com/736x/9f/5f/e2/9f5fe245bdac1fa10ed3d233d4c50cc0.jpg",
+          }}
+        ></Avatar.Image>
+      </Appbar.Header>
+
+      <View style={{ alignItems: "center", marginTop: 10 }}>
+        <FlatList
+          data={cart}
+          keyExtractor={(item) => item.id.toString()}
+          numColumns={3}
+          columnWrapperStyle={{ justifyContent: "space-between", gap: 8 }}
+          renderItem={({ item }) => (
+            <Card
+              style={{
+                minWidth: windowWidth,
+                marginBottom: 10,
+                padding: 5,
+                shadowColor: "#000",
+                shadowOpacity: 10,
+              }}
+            >
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  padding: 10,
+                }}
+              >
+                <Checkbox status={"unchecked"} onPress={() => {}} />
+
+                <View style={{ flex: 1, marginLeft: 8 }}>
+                  <Text style={{ fontWeight: "bold" }}>{item.title}</Text>
+                  <Text style={{ fontSize: 12, color: "#666" }}>
+                    {item.category}
+                  </Text>
+                  <Text style={{ fontSize: 12 }}>{item.description}</Text>
+                </View>
+
+                <IconButton
+                  icon="pencil"
+                  size={20}
+                  onPress={() => {
+                    console.log("Edit item:", item.id);
+                  }}
+                />
+              </View>
+            </Card>
+          )}
+        />
+      </View>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
