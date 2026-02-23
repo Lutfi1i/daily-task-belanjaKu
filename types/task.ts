@@ -1,9 +1,8 @@
-export type Tasks = {
+export type Task = {
     id: number; 
     title: string;
-    label: string;
-    category: string;
-    createdAt?: Date;
-    updatedAt?: Date
     description: string;
+    isFinished: boolean;
+    createdAt?: string;
+    updatedAt?: string;
 }

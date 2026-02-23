@@ -1,103 +1,214 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
-import { Avatar } from 'react-native-paper';
+import * as ImagePicker from 'expo-image-picker';
+import { useFocusEffect } from 'expo-router';
+import React, { useCallback, useState } from 'react';
+import { Alert, Image, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Button, IconButton, Text, TextInput } from 'react-native-paper';
+import { getUser, updateUser, updateUserImage } from '../../services/userService';
+import { User } from '../../types/user';
 
 export default function ProfileScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Avatar.Image
-        source={{ uri: "https://i.pinimg.com/736x/9f/5f/e2/9f5fe245bdac1fa10ed3d233d4c50cc0.jpg"}} 
-        style={{
-          justifyContent: 'center',
-          alignItems: 'center'
-        }}
-        size={120}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">No Batidao!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Elades</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const [name, setName] = useState('');
+  const [user, setUser] = useState<User | null>(null);
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  useFocusEffect(
+    useCallback(() => {
+      const currentUser = getUser();
+      if (currentUser) {
+        setUser(currentUser);
+        setName(currentUser.name);
+      }
+    }, [])
+  );
+
+  const handleSave = () => {
+    if (name.trim()) {
+      const success = updateUser(name.trim());
+      if (success) {
+        setUser(prev => prev ? { ...prev, name: name.trim() } : prev);
+        Alert.alert('Berhasil', 'Profil berhasil diperbarui!');
+      } else {
+        Alert.alert('Error', 'Gagal memperbarui profil.');
+      }
+    }
+  };
+
+  const handlePickImage = () => {
+    Alert.alert('Foto Profil', 'Pilih sumber foto', [
+      {
+        text: 'Kamera',
+        onPress: pickFromCamera,
+      },
+      {
+        text: 'Galeri',
+        onPress: pickFromGallery,
+      },
+      { text: 'Batal', style: 'cancel' },
+    ]);
+  };
+
+  const pickFromGallery = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('Izin Diperlukan', 'Izin galeri diperlukan untuk memilih foto.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+    if (!result.canceled && result.assets[0].uri) {
+      saveImage(result.assets[0].uri);
+    }
+  };
+
+  const pickFromCamera = async () => {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('Izin Diperlukan', 'Izin kamera diperlukan untuk mengambil foto.');
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+    if (!result.canceled && result.assets[0].uri) {
+      saveImage(result.assets[0].uri);
+    }
+  };
+
+  const saveImage = (uri: string) => {
+    const success = updateUserImage(uri);
+    if (success) {
+      setUser(prev => prev ? { ...prev, image: uri } : prev);
+    } else {
+      Alert.alert('Error', 'Gagal menyimpan foto profil.');
+    }
+  };
+
+  const getInitials = (n: string) =>
+    n
+      .split(' ')
+      .map(w => w[0])
+      .join('')
+      .substring(0, 2)
+      .toUpperCase();
+
+  return (
+    <View style={styles.container}>
+      <Text variant="headlineMedium" style={styles.header}>Profil</Text>
+
+      {/* Avatar */}
+      <View style={styles.avatarSection}>
+        <TouchableOpacity onPress={handlePickImage} style={styles.avatarWrapper}>
+          {user?.image ? (
+            <Image source={{ uri: user.image }} style={styles.avatar} />
+          ) : (
+            <View style={styles.avatarPlaceholder}>
+              <Text style={styles.avatarInitials}>
+                {user?.name ? getInitials(user.name) : '?'}
+              </Text>
+            </View>
+          )}
+          <View style={styles.editBadge}>
+            <IconButton icon="pencil" size={20} />
+          </View>
+        </TouchableOpacity>
+        <Text style={styles.avatarHint}>Tap untuk ganti foto</Text>
+      </View>
+
+      <View style={styles.content}>
+        <TextInput
+          label="Nama"
+          value={name}
+          onChangeText={setName}
+          mode="outlined"
+          style={styles.input}
+        />
+        <Button mode="contained" onPress={handleSave} style={styles.button}>
+          Simpan Perubahan
+        </Button>
+      </View>
+    </View>
   );
 }
 
+const AVATAR_SIZE = 100;
+
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+    padding: 20,
+  },
+  header: {
+    marginTop: 40,
+    marginBottom: 20,
+  },
+  avatarSection: {
     alignItems: 'center',
-    gap: 8,
+    marginBottom: 30,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  avatarWrapper: {
+    position: 'relative',
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
+  avatar: {
+    width: AVATAR_SIZE,
+    height: AVATAR_SIZE,
+    borderRadius: AVATAR_SIZE / 2,
+    borderWidth: 3,
+    borderColor: '#0aafff',
+  },
+  avatarPlaceholder: {
+    width: AVATAR_SIZE,
+    height: AVATAR_SIZE,
+    borderRadius: AVATAR_SIZE / 2,
+    backgroundColor: '#0aafff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 3,
+    borderColor: '#0aafff',
+  },
+  avatarInitials: {
+    color: '#fff',
+    fontSize: 36,
+    fontWeight: 'bold',
+  },
+  editBadge: {
     position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1,
+  },
+  editBadgeText: {
+    fontSize: 14,
+  },
+  avatarHint: {
+    marginTop: 8,
+    color: '#aaa',
+    fontSize: 12,
+  },
+  content: {
+    marginTop: 10,
+  },
+  input: {
+    marginBottom: 20,
+    backgroundColor: 'white',
+  },
+  button: {
+    marginTop: 10,
+    backgroundColor: '#0aafff',
   },
 });

@@ -1,52 +1,39 @@
-import { NativeTabs, Icon, Label } from 'expo-router/unstable-native-tabs';
+import { Colors } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Tabs } from 'expo-router';
 import React from 'react';
 
 export default function TabLayout() {
+  const colorScheme = useColorScheme();
 
   return (
-
-
-    <NativeTabs>
-      <NativeTabs.Trigger name='index'>
-        <Label>Task</Label>
-        <Icon sf={"house.fill"} drawable='ic_menu_agenda' />
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name='history'>
-        <Label>Riwayat</Label>
-        <Icon sf={"house.fill"} drawable='ic_menu_recent_history' />
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name='profile'>
-        <Label>Profile</Label>
-        <Icon sf={"person.fill"} drawable='	ic_menu_view' />
-      </NativeTabs.Trigger>
-    </NativeTabs>
-    // <Tabs
-    //   screenOptions={{
-    //     tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-    //     headerShown: false,
-    //     tabBarButton: HapticTab,
-    //   }}>
-    //   <Tabs.Screen
-    //     name="index"
-    //     options={{
-    //       title: 'Task',
-    //       tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
-    //     }}
-    //   />
-    //   <Tabs.Screen
-    //     name="history"
-    //     options={{
-    //       title: 'Riwayat',
-    //       tabBarIcon: ({ color }) => <IconSymbol size={28} name="text.badge.checkmark" color={color} />,
-    //     }}
-    //   />
-    //   <Tabs.Screen
-    //     name="profile"
-    //     options={{
-    //       title: 'Profile',
-    //       tabBarIcon: ({ color }) => <IconSymbol size={28} name='person.fill' color={color} />,
-    //     }}
-    //   />
-    // </Tabs>
-  )
+    <Tabs
+      screenOptions={{
+        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        headerShown: false,
+      }}>
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Home',
+          tabBarIcon: ({ color }) => <MaterialCommunityIcons name="home" size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="history"
+        options={{
+          title: 'History',
+          tabBarIcon: ({ color }) => <MaterialCommunityIcons name="history" size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ color }) => <MaterialCommunityIcons name="account" size={24} color={color} />,
+        }}
+      />
+    </Tabs>
+  );
 }
